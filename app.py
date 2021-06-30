@@ -7,12 +7,14 @@ import matplotlib.pyplot as plt
 from operator import lt as less_than, gt as greater_than
 from operator import (truediv as div, mul)
 
-value_distribution_mode = st.sidebar.selectbox('Select distribution type', ['uncorrelated','squared correlation'])
+import volume
 
-feature1_default, feature2_default = "Objective 1", "Objective 2"
+#value_distribution_mode = st.sidebar.selectbox('Select distribution type', ['uncorrelated','squared correlation'])
 
-feature1 = st.sidebar.text_input('Change Objective 1 name', value= feature1_default)
-feature2 = st.sidebar.text_input('Change Objective 2 name', value= feature2_default)
+#feature1_default, feature2_default = "Objective 1", "Objective 2"
+
+#feature1 = st.sidebar.text_input('Change Objective 1 name', value= feature1_default)
+#feature2 = st.sidebar.text_input('Change Objective 2 name', value= feature2_default)
 
 """
 # VISP Method Demo
@@ -72,6 +74,34 @@ def generate_objectives(n_packages = 20,
 
     return {feature1: weights, feature2: values}
 
+
+FullHorizontalFOV = st.sidebar.number_input('FullHorizontalFOV', min_value=5, value=10, max_value=15)
+FullVerticalFOV = st.sidebar.number_input('FullVerticalFOV', min_value=2, value=3, max_value=6)
+VirtualImageDistance = st.sidebar.number_input('VirtualImageDistance', min_value=10000, value=10000, max_value=30000)
+EyeboxToMirror1 = st.sidebar.number_input('EyeboxToMirror1', min_value=500, value=600, max_value=1500)
+EyeboxFullWidth = st.sidebar.number_input('EyeboxFullWidth', min_value=70, value=100, max_value=210)
+EyeboxFullHeight = st.sidebar.number_input('EyeboxFullHeight', min_value=30, value=50, max_value=90)
+Mirror1ObliquityAngle = st.sidebar.number_input('Mirror1ObliquityAngle', min_value=15, value=20, max_value=45)
+
+inputs = {
+        "FullHorizontalFOV": FullHorizontalFOV,
+        "FullVerticalFOV": FullVerticalFOV,
+        "VirtualImageDistance": VirtualImageDistance,
+        "EyeboxToMirror1": EyeboxToMirror1,
+        "EyeboxFullWidth": EyeboxFullWidth,
+        "EyeboxFullHeight": EyeboxFullHeight,
+        "Mirror1ObliquityAngle": Mirror1ObliquityAngle,
+        "HUD_SCREEN_10x5_FOV_BASELINE_WIDTH": 70,
+        "MechanicalVolumeIncrease": 20,
+        "M1M2OverlapFraction": 0,
+        "PGUVolumeEstimate": 0.5
+    }
+
+totalVolume = volume.TotalMechanicalVolumeOfHUD(inputs)
+
+st.write(totalVolume)
+
+n_packages = st.sidebar.number_input('No. of Solutions', min_value=5, value=50, max_value=400)
 
 seed = st.number_input('Seed: change this to see a different distribution', min_value=1, value=1, max_value=1000)
 
