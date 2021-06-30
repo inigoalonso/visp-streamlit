@@ -175,7 +175,7 @@ plt.ylabel(feature2)
 
 st.pyplot(plt.gcf())
 
-
+text_more = "Hej!"
 
 expander_more = st.beta_expander("More...")
 expander_more.write(text_more)
