@@ -18,7 +18,7 @@ st.set_page_config(
     page_title="VISP Method Demo",
     page_icon="🚗",
     layout="wide",
-    initial_sidebar_state="collapsed",
+    initial_sidebar_state="expanded",
 )
 
 if "designs" not in st.session_state:
@@ -105,7 +105,7 @@ def add_designs():
             add_design(design)
             i = i + 1
 
-st.sidebar.button(f'Add {numberDesigns} designs', on_click=add_designs)
+with config_col4: st.button(f'Add {numberDesigns} designs', on_click=add_designs)
 
 feature1, feature2 = "Volume (liter)", "Surplus Value (k€)"
 
