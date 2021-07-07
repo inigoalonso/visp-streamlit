@@ -76,7 +76,7 @@ with config_col3: st.write(f'Total volume = {totalVolume}')
 with config_col3: st.write(f'Mirror size = {mirrorSize}')
 with config_col3: st.write(f'Surplus value = {surplusValue}')
 
-#st.write(st.session_state.designs)
+st.write(st.session_state.designs)
 
 def add_designs():
     i=0
