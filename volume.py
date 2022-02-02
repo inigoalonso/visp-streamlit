@@ -133,7 +133,6 @@ dataHorizontal = [
     ]
 dfHorizontal = pd.DataFrame.from_records(dataHorizontal)
 
-
 sns.lineplot(
     data=dfHorizontal,
     x="x", y="y", hue="group", style="group",
@@ -244,7 +243,6 @@ dataVertical = [
     {'group': 'Mirror 1', 'x': Mirror1Vertical(inputs)["Mirror1BottomPointXV"], 'y': Mirror1Vertical(inputs)["Mirror1BottomPointYV"]}
     ]
 dfVertical = pd.DataFrame.from_records(dataVertical)
-
 
 sns.lineplot(
     data=dfVertical,

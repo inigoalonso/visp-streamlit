@@ -2,227 +2,222 @@ import streamlit as st
 
 import numpy as np
 import pandas as pd
-import matplotlib.pyplot as plt
-import random
-
-import plotly.express as px
-
-from operator import lt as less_than, gt as greater_than
-from operator import (truediv as div, mul)
 
 from volume import TotalMechanicalVolumeOfHUD, MirrorFullHeight
 
-from surplus_value import SurplusValue
+from surplus_value import SurplusValue_New
+
+# Streamlit configuration
 
 st.set_page_config(
     page_title="VISP Method Demo",
     page_icon="🚗",
     layout="wide",
-    initial_sidebar_state="collapsed",
+    initial_sidebar_state ="collapsed",
 )
+
+# State management
 
 if "designs" not in st.session_state:
     st.session_state.designs = []
 
-def add_design(design):
-    st.session_state.designs.append(design)
+# Classes
 
-"""
-# VISP Method Demo
+class scenario():
+    def __init__(self, name, x1, x2, x3):
+        self.name = name
+        self.x1 = x1
+        self.x2 = x2
+        self.x3 = x3
 
-**An interactive demonstration of the VISP method**
+class technology():
+    def __init__(self, name, x1, x2, x3):
+        self.name = name
+        self.x1 = x1
+        self.x2 = x2
+        self.x3 = x3
 
-TODO Description here
+class platform():
+    def __init__(self, name, x1, x2, x3):
+        self.name = name
+        self.x1 = x1
+        self.x2 = x2
+        self.x3 = x3
 
-"""
 
-#expander_configuration = st.beta_expander("Configuration")
+# ---- SIDEBAR ----
 
-#with expander_configuration: config_col1, config_col2, config_col3, config_col4 = st.beta_columns(4)
-config_col1, config_col2, config_col3, config_col4 = st.beta_columns((1, 1, 1, 2))
+with st.sidebar:
+    st.title("VISP Method Demo")
 
-with config_col1: FullHorizontalFOV = st.slider('FullHorizontalFOV', min_value=5, value=10, max_value=15)
-with config_col1: FullVerticalFOV = st.slider('FullVerticalFOV', min_value=2, value=3, max_value=6)
-with config_col1: EyeboxFullWidth = st.slider('EyeboxFullWidth', min_value=70, value=100, max_value=210)
-with config_col1: EyeboxFullHeight = st.slider('EyeboxFullHeight', min_value=30, value=50, max_value=90)
-with config_col2: VirtualImageDistance = st.slider('VirtualImageDistance', min_value=10000, value=10000, max_value=30000)
-with config_col2: EyeboxToMirror1 = st.slider('EyeboxToMirror1', min_value=500, value=600, max_value=1500)
-with config_col2: Mirror1ObliquityAngle = st.slider('Mirror1ObliquityAngle', min_value=15, value=20, max_value=45)
+    st.write("An interactive demonstration of the VISP method")
 
-inputs = {
-        "FullHorizontalFOV": FullHorizontalFOV,
-        "FullVerticalFOV": FullVerticalFOV,
-        "EyeboxFullWidth": EyeboxFullWidth,
-        "EyeboxFullHeight": EyeboxFullHeight,
-        "VirtualImageDistance": VirtualImageDistance,
-        "EyeboxToMirror1": EyeboxToMirror1,
-        "Mirror1ObliquityAngle": Mirror1ObliquityAngle,
-        "HUD_SCREEN_10x5_FOV_BASELINE_WIDTH": 70,
-        "MechanicalVolumeIncrease": 20,
-        "M1M2OverlapFraction": 0,
-        "PGUVolumeEstimate": 0.5
-    }
+    st.subheader("About")
 
-numberDesigns = st.sidebar.number_input('Set number of designs', 10, 1000, 100)
+    st.markdown("Learn more: [*SED Group on Github*](https://github.com/sed-group)")
 
-totalVolume = TotalMechanicalVolumeOfHUD(inputs)
-mirrorSize = MirrorFullHeight(inputs)
-surplusValue = SurplusValue(FullHorizontalFOV, FullVerticalFOV, mirrorSize, totalVolume)
+# ---- MAINPAGE ----
 
-design = {"inputs": inputs, "mirrorSize": mirrorSize, "totalVolume": totalVolume, "surplusValue": surplusValue}
-add_design(design)
+# Configure scenarios
 
-with config_col3: st.write(f'Total volume = {totalVolume}')
-with config_col3: st.write(f'Mirror size = {mirrorSize}')
-with config_col3: st.write(f'Surplus value = {surplusValue}')
+scenarios_expander = st.expander("Configure scenarios")
 
-st.write(st.session_state.designs)
+with scenarios_expander:
+    s1_container = st.container()
+    s2_container = st.container()
+    s3_container = st.container()
+    with s1_container:
+        col1, col2, col3, col4 = st.columns((1, 1, 1, 1))
+        col1.subheader("Scenario 1")
+        s1_x1 = col2.slider("S1: Expected performance", min_value=10, value=10, max_value=30)
+        s1_x2 = col3.slider("S1: Unit cost (k€/mm)", min_value=1, value=1, max_value=5)
+        s1_x3 = col4.slider("S1: Redesign cost (k€/l)", min_value=1000, value=1000, max_value=5000)
+    with s2_container:
+        col1, col2, col3, col4 = st.columns((1, 1, 1, 1))
+        col1.subheader("Scenario 2")
+        s2_x1 = col2.slider("S2: Expected performance", min_value=10, value=20, max_value=30)
+        s2_x2 = col3.slider("S2: Unit cost (k€/mm)", min_value=1, value=2, max_value=5)
+        s2_x3 = col4.slider("S2: Redesign cost (k€/l)", min_value=1000, value=3000, max_value=5000)
+    with s3_container:
+        col1, col2, col3, col4 = st.columns((1, 1, 1, 1))
+        col1.subheader("Scenario 3")
+        s3_x1 = col2.slider("S3: Expected performance", min_value=10, value=30, max_value=30)
+        s3_x2 = col3.slider("S3: Unit cost (k€/mm)", min_value=1, value=5, max_value=5)
+        s3_x3 = col4.slider("S3: Redesign cost (k€/l)", min_value=1000, value=5000, max_value=5000)
 
-def add_designs():
-    i=0
-    while i < numberDesigns:
-        inputs = {
-                "FullHorizontalFOV": random.uniform(5, 15),
-                "FullVerticalFOV": random.uniform(2, 6),
-                "EyeboxFullWidth": random.uniform(70, 210),
-                "EyeboxFullHeight": random.uniform(30, 90),
-                "VirtualImageDistance": random.uniform(10000, 30000),
-                "EyeboxToMirror1": random.uniform(500, 1500),
-                "Mirror1ObliquityAngle": random.uniform(15, 45),
-                "HUD_SCREEN_10x5_FOV_BASELINE_WIDTH": 70,
-                "MechanicalVolumeIncrease": 20,
-                "M1M2OverlapFraction": 0,
-                "PGUVolumeEstimate": 0.5
+# Configure technologies
+
+technologies_expander = st.expander("Configure technologies")
+
+with technologies_expander:
+    t1_container = st.container()
+    t2_container = st.container()
+    t3_container = st.container()
+    with t1_container:
+        col1, col2, col3, col4 = st.columns((1, 1, 1, 1))
+        col1.subheader("Technology 1")
+        t1_x1 = col2.slider("T1: Horizontal FoV", min_value=5, value=5, max_value=15)
+        t1_x2 = col3.slider("T1: Vertical FoV", min_value=2, value=2, max_value=6)
+        t1_x3 = col4.slider("T1: Image Distance", min_value=10000, value=10000, max_value=30000)
+    with t2_container:
+        col1, col2, col3, col4 = st.columns((1, 1, 1, 1))
+        col1.subheader("Technology 2")
+        t2_x1 = col2.slider("T2: Horizontal FoV", min_value=5, value=10, max_value=15)
+        t2_x2 = col3.slider("T2: Vertical FoV", min_value=2, value=4, max_value=6)
+        t2_x3 = col4.slider("T2: Image Distance", min_value=10000, value=20000, max_value=30000)
+    with t3_container:
+        col1, col2, col3, col4 = st.columns((1, 1, 1, 1))
+        col1.subheader("Technology 3")
+        t3_x1 = col2.slider("T3: Horizontal FoV", min_value=5, value=15, max_value=15)
+        t3_x2 = col3.slider("T3: Vertical FoV", min_value=2, value=6, max_value=6)
+        t3_x3 = col4.slider("T3: Image Distance", min_value=10000, value=30000, max_value=30000)
+
+# Configure platforms
+
+platforms_expander = st.expander("Configure platforms")
+
+with platforms_expander:
+    p1_container = st.container()
+    p2_container = st.container()
+    p3_container = st.container()
+    with p1_container:
+        col1, col2, col3, col4 = st.columns((1, 1, 1, 1))
+        col1.subheader("Platform 1")
+        p1_x1 = col2.slider("P1: Space reservation in X (mm)", min_value=100, value=300, max_value=400)
+        p1_x2 = col3.slider("P1: Space reservation in Y (mm)", min_value=100, value=200, max_value=400)
+        p1_x3 = col4.slider("P1: Space reservation in Z (mm)", min_value=100, value=150, max_value=400)
+    with p2_container:
+        col1, col2, col3, col4 = st.columns((1, 1, 1, 1))
+        col1.subheader("Platform 2")
+        p2_x1 = col2.slider("P2: Space reservation in X (mm)", min_value=100, value=400, max_value=400)
+        p2_x2 = col3.slider("P2: Space reservation in Y (mm)", min_value=100, value=200, max_value=400)
+        p2_x3 = col4.slider("P2: Space reservation in Z (mm)", min_value=100, value=200, max_value=400)
+    with p3_container:
+        col1, col2, col3, col4 = st.columns((1, 1, 1, 1))
+        col1.subheader("Platform 3")
+        p3_x1 = col2.slider("P3: Space reservation in X (mm)", min_value=100, value=300, max_value=400)
+        p3_x2 = col3.slider("P3: Space reservation in Y (mm)", min_value=100, value=200, max_value=400)
+        p3_x3 = col4.slider("P3: Space reservation in Z (mm)", min_value=100, value=300, max_value=400)
+
+
+# Display results
+
+s1 = scenario("Scenario 1", s1_x1, s1_x2, s1_x3)
+s2 = scenario("Scenario 2", s2_x1, s2_x2, s2_x3)
+s3 = scenario("Scenario 3", s3_x1, s3_x2, s3_x3)
+
+t1 = technology("Technology 1", t1_x1, t1_x2, t1_x3)
+t2 = technology("Technology 2", t2_x1, t2_x2, t2_x3)
+t3 = technology("Technology 3", t3_x1, t3_x2, t3_x3)
+
+p1 = platform("Platform 1", p1_x1, p1_x2, p1_x3)
+p2 = platform("Platform 2", p2_x1, p2_x2, p2_x3)
+p3 = platform("Platform 3", p3_x1, p3_x2, p3_x3)
+
+scenarios = [s1, s2, s3]
+technologies = [t1, t2, t3]
+platforms = [p1, p2, p3]
+
+# initialize list of lists
+data = []
+
+for i, s in enumerate(scenarios):
+    row = [f'Scenario {i+1}']
+    for t in technologies:
+        for p in platforms:
+            inputs = {
+                "FullHorizontalFOV" : t.x1,
+                "FullVerticalFOV" : t.x2,
+                "VirtualImageDistance" : t.x3,
+                "EyeboxToMirror1" : 1000,
+                "EyeboxFullWidth" : 140,
+                "EyeboxFullHeight" : 60,
+                "Mirror1ObliquityAngle" : 30,
+                "HUD_SCREEN_10x5_FOV_BASELINE_WIDTH" : 70,
+                "MechanicalVolumeIncrease" : 40,
+                "M1M2OverlapFraction" : 0,
+                "PGUVolumeEstimate" : 0.5
             }
+            volume = TotalMechanicalVolumeOfHUD(inputs)
+            mirrorSize = MirrorFullHeight(inputs)
+            reservedVolume = (p.x1*p.x2*p.x3)/1_000_000
+            volumeUsePercentage = volume / reservedVolume * 100
+            # st.write(f"Use of volume = {volumeUsePercentage:.2f} % ____ {volume:.2f} of {reservedVolume:.2f}")
+            surplusValue = SurplusValue_New(t.x1, t.x2, mirrorSize, volume,s.x1, s.x2, s.x3)
+            #st.write(f"{s.name} {t.name} {p.name} / Volume = {volume:.2f} liters / Mirror = {mirrorSize:.2f} mm / Surplus Value = {surplusValue:.2f} k€")
+            row.append(surplusValue)
+    data.append(row)
 
-        totalVolume = TotalMechanicalVolumeOfHUD(inputs)
-        if totalVolume <= 0:
-            print(inputs)
-        mirrorSize = MirrorFullHeight(inputs)
-        surplusValue = SurplusValue(inputs["FullHorizontalFOV"], inputs["FullVerticalFOV"], mirrorSize, totalVolume)
-        design = {"inputs": inputs, "mirrorSize": mirrorSize, "totalVolume": totalVolume, "surplusValue": surplusValue}
-        if totalVolume > 0:
-            add_design(design)
-            i = i + 1
+# Create the pandas DataFrame
+#df_combinations = pd.DataFrame(data, columns = ['Scenario', 'Technology', 'Platform', 'SurplusValue'])
+df_combinations = pd.DataFrame(data, columns = ['Scenario', 'T1P1', 'T1P2', 'T1P3', 'T2P1', 'T2P2', 'T2P3', 'T3P1', 'T3P2', 'T3P3'])
 
-st.sidebar.button(f'Add {numberDesigns} designs', on_click=add_designs)
+st.dataframe(df_combinations.style.highlight_max(axis=1))
 
-feature1, feature2 = "Volume (liter)", "Surplus Value (k€)"
+# Tests
 
-#mode_ = st.sidebar.selectbox(f'Optimisation direction of {feature1}, {feature2}', ["min, max","min, min","max, min", "max, max"])
-mode_ = "min, max"
-
-def generate_objectives():
-
-    volumes = []
-    values = []
-    for design in st.session_state.designs:
-        volumes.append(design["totalVolume"])
-        values.append(design["surplusValue"])
-
-    return {feature1: volumes, feature2: values}
-
-#objective_values = generate_objectives(n_packages, seed=seed, value_distribution_mode=value_distribution_mode, visualise=False)
-objective_values = generate_objectives()
-
-if mode_ == "min, max":
-    objective_mode, heuristic, soh_unit = {feature1: 'min', feature2: 'max'}, 'value/volume', 'k€/liter'
-elif mode_ == "min, min":
-    objective_mode, heuristic, soh_unit = {feature1: 'min', feature2: 'min'}, '1/value/volume', '1/k€/liter'
-elif mode_ == "max, max":
-    objective_mode, heuristic, soh_unit = {feature1: 'max', feature2: 'max'}, 'value*volume',  'k€*liter'
-elif mode_ == "max, min":
-    objective_mode, heuristic, soh_unit = {feature1: 'max', feature2: 'min'}, 'volume/value', 'liter/k€'
+for p in platforms:
+    st.write(f"Reserved volume: {(p.x1*p.x2*p.x3)/1_000_000} liters")
 
 
-# for Pareto Optimal selection
-mode_to_operator = {'min': less_than, 'max': greater_than}
-objective_operator = {key: mode_to_operator[objective_mode[key]] for key in objective_mode.keys()}
+# Footer
 
-def objectives_to_pareto_front(objective_values):
-    feature1 = list(objective_values.keys())[0]
-    feature2 = list(objective_values.keys())[1]
+footer_container = st.container()
 
-    # objective_values = {}
-    # for objective in objectives:
-    #    objective_values[objective] = [knapsacks[idx][objective] for idx in knapsacks]
+with footer_container:
+    footer_expander = st.expander("Debugging details")
 
-    idxs_pareto = []
-
-    idx_objects = np.arange(len(objective_values[feature1]))
-
-    for idx in idx_objects:
-        is_pareto = True
-
-        this_weight = objective_values[feature1][idx]
-        this_value = objective_values[feature2][idx]
-
-        other_weights = np.array(list(objective_values[feature1][:idx]) + list(
-            objective_values[feature1][idx + 1:]))
-        other_values = np.array(list(objective_values[feature2][:idx]) + list(
-            objective_values[feature2][idx + 1:]))
-
-        for jdx in range(len(other_weights)):
-            other_dominates = objective_operator[feature1](other_weights[jdx],
-                                                           this_weight) & \
-                              objective_operator[feature2](other_values[jdx],
-                                                           this_value)
-
-            if other_dominates:
-                is_pareto = False
-                break
-
-        if is_pareto:
-            idxs_pareto.append(idx_objects[idx])
-
-    return idxs_pareto
+with footer_expander:
+    st.write(st.session_state.designs)
 
 
-pareto_idxs = objectives_to_pareto_front(objective_values)
-print(f'Pareto front: {pareto_idxs}')
-for pareto_idx in pareto_idxs:
-    print(f'Pareto point: {objective_values[feature1][pareto_idx]}, {objective_values[feature2][pareto_idx]}')
-    print(next((item for item in st.session_state.designs if item["totalVolume"] == objective_values[feature1][pareto_idx]), None))
-
-# plt.scatter(objective_values[feature1], objective_values[feature2], s=10, alpha=0.7, color='blue')
-
-# plt.scatter([val for idx, val in enumerate(objective_values[feature1]) if idx in pareto_idxs],
-#             [val for idx, val in enumerate(objective_values[feature2]) if idx in pareto_idxs],
-#             marker='x', s=100, linewidth=4, color='green')
-
-list1 = [val for idx, val in enumerate(objective_values[feature1]) if idx in pareto_idxs]
-list2 = [val for idx, val in enumerate(objective_values[feature2]) if idx in pareto_idxs]
-list1, list2 = zip(*sorted(zip(list1, list2)))
-# To return lists instead of tuples, uncomment the following line:
-# list1, list2 = (list(t) for t in zip(*sorted(zip(list1, list2))))
-
-# plt.plot(list1,
-#         list2,
-#         marker='x', linewidth=4, color='red')
-
-# plt.xlabel(feature1)
-# plt.ylabel(feature2)
-
-
-# with config_col4: st.pyplot(plt.gcf())
-
-"""
-Learn more: [*SED Group on Github*](https://github.com/sed-group)  
-"""
-
-## Plotly
-
-designs_df = pd.DataFrame(st.session_state.designs)
-
-plot = fig = px.scatter(
-    data_frame=designs_df,
-    x="totalVolume",
-    y="surplusValue",
-    #color="surplusValue",
-    labels="Alternative designs",
-)
-
-fig.add_scatter(x=list1, y=list2, name="Pareto front")
-
-with config_col4: st.plotly_chart(plot, use_container_width=True)
+# ---- HIDE STREAMLIT STYLE ----
+hide_st_style = """
+                <style>
+                #MainMenu {visibility: hidden;}
+                header {visibility: visible;}
+                footer {visibility: hidden;}
+                </style>
+                """
+st.markdown(hide_st_style, unsafe_allow_html=True)
 
