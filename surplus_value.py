@@ -9,27 +9,30 @@ import settings as s
 # FullVerticalFOV = 4
 # mirrorSize = 200
 # volume = 4
+# expectedPerformance = 10
+# unitCost = 0.001
+# cost_redesign = 0.005
 
 # Calculate engineering variables
 
 ## calculate % FoV
 
-def calculateFoV(FullHorizontalFOV,FullVerticalFOV):
+def calculate_fov(FullHorizontalFOV,FullVerticalFOV):
     """calculate a metric for the FOV of the HUD"""
     FoV = (FullHorizontalFOV * FullVerticalFOV * 100) / (67 * 20)
     return FoV
 
 ## cost model
 
-def calculateCostVehicle(cost_mirror_unit, mirrorSize, cost_vehicle_without_HUD, assembly_cost):
+def calculate_cost_vehicle(cost_mirror_unit, mirrorSize, cost_vehicle_without_HUD, cost_assembly, cost_redesign):
     """calculate the cost of the vehicle"""
     cost_mirror = cost_mirror_unit * mirrorSize
-    cost_vehicle = cost_mirror + cost_vehicle_without_HUD + assembly_cost # euro
+    cost_vehicle = cost_mirror + cost_vehicle_without_HUD + cost_assembly + cost_redesign # euro
     return cost_vehicle
 
 ## weight model
 
-def calculateWeightVehicle(volume, weight_vehicle_without_HUD):
+def calculate_weight_vehicle(volume, weight_vehicle_without_HUD):
     """calculate the weight of the vehicle"""       
     weight_hud = 0.1 * volume  # kg
     weight_vehicle = weight_hud + weight_vehicle_without_HUD # kg
@@ -37,28 +40,28 @@ def calculateWeightVehicle(volume, weight_vehicle_without_HUD):
 
 ## fuel consumption model
 
-def calculateFuelConsumption(volume, weight_vehicle_without_HUD):
+def calculate_fuel_consumption(volume, weight_vehicle_without_HUD):
     """calculate the fuel consumption of the vehicle"""
-    fuel_consumpt = calculateWeightVehicle(volume, weight_vehicle_without_HUD) * math.exp(-4.7)  # km / liter
+    fuel_consumpt = calculate_weight_vehicle(volume, weight_vehicle_without_HUD) * math.exp(-4.7)  # km / liter
     return fuel_consumpt
 
-def calculateFuelCost(volume, weight_vehicle_without_HUD, kilometers_year, cost_fuel):
+def calculate_fuel_cost(volume, weight_vehicle_without_HUD, kilometers_year, cost_fuel):
     """calculate the fuel cost of the vehicle"""
-    fuel_consumpt = calculateFuelConsumption(volume, weight_vehicle_without_HUD)
+    fuel_consumpt = calculate_fuel_consumption(volume, weight_vehicle_without_HUD)
     fuel_cost_year = (kilometers_year/fuel_consumpt) * cost_fuel # keuro / year
     return fuel_cost_year
 
 ## calculate demand, copied from demand.py
 
-def calculateDemand(FullHorizontalFOV, FullVerticalFOV, volume, weight_vehicle_without_HUD, cost_fuel, person_height, price_vehicle, year):
+def calculate_demand(FullHorizontalFOV, FullVerticalFOV, volume, weight_vehicle_without_HUD, cost_fuel, person_height, price_vehicle, year):
     """calculate the demand of the vehicle"""
     Lin_no__1 = (400.389457364428
-                + -0.0496637629531165 * (calculateFoV(FullHorizontalFOV, FullVerticalFOV))
-                + 0.0438458326033747  * (calculateFuelConsumption(volume, weight_vehicle_without_HUD))
-                + 3.53646955685314 * (cost_fuel * 1000)
-                + -0.0958055046356103 * (person_height)
-                + 0.0000987106990985412 * (price_vehicle * 1000)
-                + -0.193495221339535 * (year)
+                + -0.0496637629531165    * (calculate_fov(FullHorizontalFOV, FullVerticalFOV))
+                +  0.0438458326033747    * (calculate_fuel_consumption(volume, weight_vehicle_without_HUD))
+                +  3.53646955685314      * (cost_fuel * 1000)
+                + -0.0958055046356103    * (person_height)
+                +  0.0000987106990985412 * (price_vehicle * 1000)
+                + -0.193495221339535     * (year)
                 )
     Prob_yes_1 = 1 / (1 + math.exp(Lin_no__1)) # demand
     return Prob_yes_1
@@ -72,7 +75,7 @@ class SV:
 
     cost_mirror_unit = 5 / 1000 # keuro/mm^2
     price_vehicle = 35000 / 1000 # k€uro/vehicle
-    assembly_cost = 556.20 / 1000 # k€euro/vehicle
+    cost_assembly = 556.20 / 1000 # k€euro/vehicle
     cost_vehicle_without_HUD = 20000 / 1000  # k€uro /vehicle
     weight_vehicle_without_HUD = 1800 # kg /vehicle
     cost_fuel = 1.9 / 1000 # kEuro / liter
@@ -88,7 +91,7 @@ class SV:
     person_height = 180 # cm
 
     # Redesign costs
-    redesign_cost = 1000 # k€ / liter
+    #cost_redesign = 1000 # k€ / liter
 
     # configuration of simulation
 
@@ -97,7 +100,7 @@ class SV:
     simulation_duration = 30 # years
     time_between_counting = 1 # year
 
-    def __init__(self, env, FullHorizontalFOV, FullVerticalFOV, mirrorSize, volume):
+    def __init__(self, env, FullHorizontalFOV, FullVerticalFOV, mirrorSize, volume, cost_redesign):
 
         self.env = env
 
@@ -105,6 +108,7 @@ class SV:
         self.FullVerticalFOV = FullVerticalFOV
         self.mirrorSize = mirrorSize
         self.volume = volume
+        self.cost_redesign = cost_redesign
 
         self.i = 0
 
@@ -177,7 +181,7 @@ class SV:
         # set vehicle demand
 
         self.current = math.ceil(s.theoretical_demand 
-                                * calculateDemand(self.FullHorizontalFOV, 
+                                * calculate_demand(self.FullHorizontalFOV, 
                                                   self.FullVerticalFOV, 
                                                   self.volume, 
                                                   self.weight_vehicle_without_HUD, 
@@ -235,10 +239,10 @@ class SV:
             # all calculations are scaled down by the discrete time
 
             self.production_cost = (self.in_production
-                                   * (calculateCostVehicle(self.cost_mirror_unit, 
-                                                           self.mirrorSize, 
-                                                           self.cost_vehicle_without_HUD, 
-                                                           self.assembly_cost))
+                                   * (calculate_cost_vehicle(self.cost_mirror_unit, 
+                                                            self.mirrorSize, 
+                                                            self.cost_vehicle_without_HUD, 
+                                                            self.cost_assembly))
                                    * s.discrete_time)  # the total cost is "spread" along the production time
 
             self.revenue = self.in_sale * (s.price_vehicle) * s.discrete_time
@@ -261,7 +265,7 @@ class SV_New:
     # configuration
 
     price_vehicle = 35000 / 1000 # k€uro/vehicle
-    assembly_cost = 556.20 / 1000 # k€euro/vehicle
+    cost_assembly = 556.20 / 1000 # k€euro/vehicle
     cost_vehicle_without_HUD = 20000 / 1000  # k€uro /vehicle
     weight_vehicle_without_HUD = 1800 # kg /vehicle
     cost_fuel = 1.9 / 1000 # kEuro / liter
@@ -277,7 +281,7 @@ class SV_New:
     person_height = 180 # cm
 
     # Redesign costs
-    redesign_cost = 1000 # k€ / liter
+    #cost_redesign = 1000 # k€ / liter
 
     # configuration of simulation
 
@@ -286,7 +290,7 @@ class SV_New:
     simulation_duration = 30 # years
     time_between_counting = 1 # year
 
-    def __init__(self, env, FullHorizontalFOV, FullVerticalFOV, mirrorSize, volume, expectedPerformance, unitCost, redesignCost):
+    def __init__(self, env, FullHorizontalFOV, FullVerticalFOV, mirrorSize, volume, expectedPerformance, unitCost, cost_redesign):
 
         self.env = env
 
@@ -296,11 +300,11 @@ class SV_New:
         self.volume = volume
         self.expectedPerformance = expectedPerformance #HFoV*VFoV
         self.cost_mirror_unit = unitCost # k€/mm
-        self.cost_redesign = redesignCost # k€/l
+        self.cost_redesign = cost_redesign # k€/l
 
         self.i = 0
 
-       # initializing costs and revenues
+        # initializing costs and revenues
 
         self.development_cost = 0
         self.production_cost = 0
@@ -369,7 +373,7 @@ class SV_New:
         # set vehicle demand
 
         self.current = math.ceil(s.theoretical_demand 
-                                * calculateDemand(self.FullHorizontalFOV, 
+                                * calculate_demand(self.FullHorizontalFOV, 
                                                   self.FullVerticalFOV, 
                                                   self.volume, 
                                                   self.weight_vehicle_without_HUD, 
@@ -427,10 +431,11 @@ class SV_New:
             # all calculations are scaled down by the discrete time
 
             self.production_cost = (self.in_production
-                                   * (calculateCostVehicle(self.cost_mirror_unit, 
+                                   * (calculate_cost_vehicle(self.cost_mirror_unit, 
                                                            self.mirrorSize, 
                                                            self.cost_vehicle_without_HUD, 
-                                                           self.assembly_cost))
+                                                           self.cost_assembly,
+                                                           self.cost_redesign))
                                    * s.discrete_time)  # the total cost is "spread" along the production time
 
             self.revenue = self.in_sale * (s.price_vehicle) * s.discrete_time
@@ -453,7 +458,7 @@ class SV_New:
 # run Surplus Value of alternative
 # launch environment
 
-def SurplusValue(FullHorizontalFOV, FullVerticalFOV, mirrorSize, volume):
+def surplus_value(FullHorizontalFOV, FullVerticalFOV, mirrorSize, volume):
 
     env = simpy.Environment()
     #simpy.util.start_delayed(env, simulation_run(env), delay=1)
@@ -469,11 +474,11 @@ def SurplusValue(FullHorizontalFOV, FullVerticalFOV, mirrorSize, volume):
     return surplus_value
 
 
-def SurplusValue_New(FullHorizontalFOV, FullVerticalFOV, mirrorSize, volume, expectedPerformance, unitCost, redesignCost):
+def surplus_value_new(FullHorizontalFOV, FullVerticalFOV, mirrorSize, volume, expectedPerformance, unitCost, cost_redesign):
 
     env = simpy.Environment()
     #simpy.util.start_delayed(env, simulation_run(env), delay=1)
-    hud = SV_New(env, FullHorizontalFOV, FullVerticalFOV, mirrorSize, volume, expectedPerformance, unitCost, redesignCost)
+    hud = SV_New(env, FullHorizontalFOV, FullVerticalFOV, mirrorSize, volume, expectedPerformance, unitCost, cost_redesign)
     #print("Starting simulation.")
     env.run(until=s.simulation_duration)
     #print("End of simulation.")
@@ -485,4 +490,4 @@ def SurplusValue_New(FullHorizontalFOV, FullVerticalFOV, mirrorSize, volume, exp
     return surplus_value
 
 if __name__ == '__main__':
-    SurplusValue(10, 4, 200, 4)
+    surplus_value(10, 4, 200, 4)
